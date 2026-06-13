@@ -92,6 +92,38 @@ def seed(app=None, drop_tables=True):
             from importer import run_import
             report = run_import(csv_path)
             print(f"Successfully auto-imported {report['expenses_imported']} expenses and {report['settlements_imported']} settlements.")
+            
+            # Generate static import_report.md for repository submission
+            report_path = "import_report.md"
+            if not created_own_app:
+                report_path = os.path.join(app.root_path, "import_report.md")
+                
+            try:
+                with open(report_path, "w", encoding="utf-8") as rf:
+                    rf.write("# 📋 CSV Import & Anomaly Detection Report\n\n")
+                    rf.write("This report was automatically produced by the app's validation engine when ingesting the messy flatmate spreadsheet export (`Expenses Export.csv`).\n\n")
+                    
+                    rf.write("## 📊 Summary Metrics\n\n")
+                    rf.write(f"- **Total Rows Processed**: {report['total_rows_processed']}\n")
+                    rf.write(f"- **Expenses Successfully Imported**: {report['expenses_imported']}\n")
+                    rf.write(f"- **Settlements Logged & Promoted**: {report['settlements_imported']}\n")
+                    rf.write(f"- **Rows Skipped (Invalid/Critical)**: {report['rows_skipped']}\n")
+                    rf.write(f"- **Total Anomalies Detected & Handled**: {len(report['anomalies'])}\n\n")
+                    
+                    rf.write("## 🚨 Detailed Anomaly Log\n\n")
+                    rf.write("| Row | Anomaly Type | Severity | Action Taken | Details |\n")
+                    rf.write("|---|---|---|---|---|\n")
+                    for a in report['anomalies']:
+                        row_idx = a.get('row', 'N/A')
+                        a_type = a.get('type', '')
+                        severity = a.get('severity', '').upper()
+                        action = a.get('action', '')
+                        details = a.get('details', '')
+                        details_clean = details.replace("\n", " ").replace("|", "\\|")
+                        rf.write(f"| {row_idx} | {a_type} | {severity} | {action} | {details_clean} |\n")
+                print(f"Successfully generated static {report_path}")
+            except Exception as re_err:
+                print(f"Failed to generate static report: {str(re_err)}")
         else:
             print("Expenses Export.csv not found, skipping auto-import.")
 
