@@ -19,7 +19,7 @@ with app.app_context():
     for name, bal in balances.items():
         print(f"{name:<10}: Rs. {bal:,.2f}")
         
-    print("\n=== AISHA'S SETTLEMENT PLAN (Who pays whom) ===")
+    print("\n=== OPTIMIZED SETTLEMENT PLAN (Min. Transactions) ===")
     transfers = resolve_group_debts(group.id)
     for t in transfers:
         print(f"{t['from']} pays {t['to']} -> Rs. {t['amount']:,.2f}")
