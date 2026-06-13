@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Validation Report - Shared Expenses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark-1: #0f172a;
+            --bg-dark-2: #020617;
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            /* Severity colors */
+            --sev-critical: #ef4444;
+            --sev-high: #f97316;
+            --sev-medium: #eab308;
+            --sev-low: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 50%, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .report-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Header block */
+        .report-header {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px 30px;
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        .title-block h1 {
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #f472b6, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .title-block p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .btn-back:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        /* Summary Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+        }
+        .stat-card h5 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .stat-card p {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #e2e8f0;
+        }
+
+        /* Log Card */
+        .log-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .log-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 12px;
+        }
+
+        /* Log items list list styling */
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .log-item {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .log-item:hover {
+            transform: scale(1.005);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .log-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .row-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .anomaly-type {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #e2e8f0;
+            flex-grow: 1;
+            margin-left: 5px;
+        }
+
+        .severity-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+        .severity-badge.critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .severity-badge.high {
+            background: rgba(249, 115, 22, 0.15);
+            color: #ffedd5;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        .severity-badge.medium {
+            background: rgba(234, 179, 8, 0.15);
+            color: #fef9c3;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .severity-badge.low {
+            background: rgba(59, 130, 246, 0.15);
+            color: #dbeafe;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .log-details {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--text-muted);
+        }
+
+        .log-action-taken {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #c7d2fe;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-container">
+        
+        <!-- Header -->
+        <header class="report-header">
+            <div class="title-block">
+                <h1>CSV Validation Report</h1>
+                <p>Ingestion Log & Policy Audit for Expenses Export</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn-back">Back to Dashboard</a>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h5>Rows Processed</h5>
+                <p style="color: #60a5fa;">{{ report.total_rows_processed }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>Expenses Loaded</h5>
+                <p style="color: #34d399;">{{ report.expenses_imported }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>Settlements Parsed</h5>
+                <p style="color: #a7f3d0;">{{ report.settlements_imported }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>Anomalies Resolved</h5>
+                <p style="color: #fca5a5;">{{ report.anomalies|length }}</p>
+            </div>
+        </div>
+
+        <!-- Log List -->
+        <main class="log-card">
+            <div class="log-title">Audit Ledger & Resolution Actions</div>
+            <div class="log-list">
+                {% if report.anomalies %}
+                    {% for a in report.anomalies %}
+                    <div class="log-item">
+                        <div class="log-item-header">
+                            <span class="row-tag">Row {{ a.row }}</span>
+                            <span class="anomaly-type">{{ a.type }}</span>
+                            <span class="severity-badge {{ a.severity }}">{{ a.severity }}</span>
+                        </div>
+                        <p class="log-details">{{ a.details }}</p>
+                        <span class="log-action-taken">🔧 Policy Action: {{ a.action }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: var(--text-muted); padding: 30px; border: 1px dashed var(--card-border); border-radius: 14px;">
+                        No anomalies logged! The dataset matches constraints.
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+
+    </div>
+
+</body>
+</html>

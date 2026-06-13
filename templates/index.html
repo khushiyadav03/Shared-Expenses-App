@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flat 101 - Shared Expenses App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark-1: #0f172a;
+            --bg-dark-2: #020617;
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.2);
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 50%, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 30px 20px;
+            overflow-x: hidden;
+        }
+
+        /* Container Layout */
+        .dashboard-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Top Header */
+        .dashboard-header {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px 30px;
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        .brand h1 {
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #a5b4fc, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-tag {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout {
+            color: #fca5a5;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Main Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards and Sections */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 12px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Members List List styling */
+        .member-list, .balances-list, .settlement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .member-item, .balance-item, .settlement-item {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .balance-item {
+            cursor: pointer;
+        }
+        .balance-item:hover {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.05);
+            transform: scale(1.01);
+        }
+
+        .member-info h4, .balance-info h4 {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .member-info p, .balance-info p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Balance Amount styling */
+        .balance-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .balance-amount.credit {
+            color: #34d399;
+            text-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+        }
+        .balance-amount.debt {
+            color: #f87171;
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.2);
+        }
+
+        /* Aisha's transfers */
+        .transfer-card {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px dashed rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .transfer-party {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .transfer-party strong {
+            font-size: 1.05rem;
+        }
+        .transfer-arrow {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .transfer-value {
+            font-weight: 800;
+            color: #a5b4fc;
+            font-size: 1.1rem;
+        }
+
+        /* Forms Styling */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .form-group input, .form-group select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            font-weight: 600;
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            transition: all 0.3s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px var(--accent-glow);
+        }
+
+        /* File Upload */
+        .file-upload-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed var(--card-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .file-upload-form:hover .file-input-btn {
+            border-color: var(--accent);
+            color: var(--text-main);
+        }
+
+        .btn-upload {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #a7f3d0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .btn-upload:hover {
+            background: rgba(16, 185, 129, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* Flash Messages */
+        .flashes {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .flash {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .flash.success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
+        }
+        .flash.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        .flash.info {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        /* Report Link */
+        .btn-report {
+            text-decoration: none;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fde68a;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-report:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        /* Trace Modal / Sidebar */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 100%;
+            max-width: 580px;
+            height: 100vh;
+            background: #0f172a;
+            border-left: 1px solid var(--card-border);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+            z-index: 101;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 15px;
+        }
+        .sidebar-header h2 {
+            font-weight: 800;
+            font-size: 1.4rem;
+        }
+        .btn-close-sidebar {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Trace detail groups */
+        .trace-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .trace-summary-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+        .trace-summary-card h5 {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        .trace-summary-card p {
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+
+        .trace-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .trace-section h4 {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            padding-bottom: 5px;
+        }
+        .trace-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .trace-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .trace-table td {
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .trace-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .math-block {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #c7d2fe;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Trace Sidebar -->
+    <div class="sidebar-overlay" id="overlay" onclick="closeTrace()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 id="trace-title">Trace Balance</h2>
+            <button class="btn-close-sidebar" onclick="closeTrace()">&times;</button>
+        </div>
+        
+        <!-- Summary metrics -->
+        <div class="trace-summary-grid">
+            <div class="trace-summary-card">
+                <h5>Total Paid</h5>
+                <p id="trace-paid" style="color: #34d399;"></p>
+            </div>
+            <div class="trace-summary-card">
+                <h5>Total Owed (in Splits)</h5>
+                <p id="trace-owed" style="color: #f87171;"></p>
+            </div>
+            <div class="trace-summary-card">
+                <h5>Settlements Sent</h5>
+                <p id="trace-sent" style="color: #60a5fa;"></p>
+            </div>
+            <div class="trace-summary-card">
+                <h5>Settlements Received</h5>
+                <p id="trace-received" style="color: #fb7185;"></p>
+            </div>
+        </div>
+
+        <!-- Verification Formula -->
+        <div class="math-block" id="trace-formula"></div>
+
+        <!-- Paid Expenses -->
+        <div class="trace-section">
+            <h4>Expenses Paid</h4>
+            <div style="max-height: 180px; overflow-y: auto;">
+                <table class="trace-table" id="trace-paid-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th style="text-align: right;">Original Amount</th>
+                            <th style="text-align: right;">INR Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Owed Splits -->
+        <div class="trace-section">
+            <h4>Owed splits</h4>
+            <div style="max-height: 180px; overflow-y: auto;">
+                <table class="trace-table" id="trace-owed-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Payer</th>
+                            <th style="text-align: right;">Owed</th>
+                            <th style="text-align: right;">INR Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settlements Sent/Received -->
+        <div class="trace-section">
+            <h4>Settlements (Transfers)</h4>
+            <div style="max-height: 120px; overflow-y: auto;">
+                <table class="trace-table" id="trace-settlements-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Counterparty</th>
+                            <th style="text-align: right;">INR Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="brand">
+                <h1>Flat 101</h1>
+                <p>Shared Expenses & Anomaly Importer</p>
+            </div>
+            <div class="user-menu">
+                <span class="user-tag">👤 {{ current_user.name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for category, message in messages %}
+                <li class="flash {{ category }}">{{ message }} <span style="cursor:pointer;" onclick="this.parentElement.remove()">&times;</span></li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Column: Group Info & Forms -->
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                
+                <!-- Group Members -->
+                <section class="card">
+                    <div class="card-title">
+                        Group Members
+                    </div>
+                    <div class="member-list">
+                        {% for m in members %}
+                        <div class="member-item">
+                            <div class="member-info">
+                                <h4>{{ m.name }}</h4>
+                                <p>Joined: {{ m.joined_at }}</p>
+                            </div>
+                            <span class="status-badge {% if m.left_at == 'Active' %}active{% else %}inactive{% endif %}">
+                                {{ m.left_at }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Record Settlement -->
+                <section class="card">
+                    <div class="card-title">Record Settlement</div>
+                    <form action="{{ url_for('record_settlement') }}" method="POST" class="member-list" style="gap: 15px;">
+                        <input type="hidden" name="group_id" value="{{ group.id }}">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sender_id">Sender (Payer)</label>
+                                <select name="sender_id" id="sender_id" required>
+                                    {% for u in users %}
+                                    <option value="{{ u.id }}">{{ u.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="receiver_id">Receiver</label>
+                                <select name="receiver_id" id="receiver_id" required>
+                                    {% for u in users %}
+                                    <option value="{{ u.id }}" {% if loop.index == 2 %}selected{% endif %}>{{ u.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="amount">Amount (INR)</label>
+                                <input type="number" step="0.01" name="amount" id="amount" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" name="date" id="date" value="2026-04-20" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">Record Settlement</button>
+                    </form>
+                </section>
+
+                <!-- CSV Import Panel -->
+                <section class="card">
+                    <div class="card-title">
+                        <span>CSV Data Importer</span>
+                        {% if session.get('import_report') %}
+                        <a href="{{ url_for('view_report') }}" class="btn-report">View Import Report</a>
+                        {% endif %}
+                    </div>
+                    <form action="{{ url_for('import_csv') }}" method="POST" enctype="multipart/form-data" class="file-upload-form">
+                        <div class="file-input-wrapper">
+                            <div class="file-input-btn">Select Expenses Export CSV...</div>
+                            <input type="file" name="file" accept=".csv" required onchange="this.previousElementSibling.innerText = this.files[0].name">
+                        </div>
+                        <button type="submit" class="btn-upload">Import</button>
+                    </form>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4;">
+                        ⚠️ <strong>Warning:</strong> Ingesting a new file will reset and re-seed the local database first to ensure validation reports match the raw CSV records.
+                    </p>
+                </section>
+            </div>
+
+            <!-- Right Column: Balances & Optimized Transfers -->
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                
+                <!-- Balances Section -->
+                <section class="card">
+                    <div class="card-title">
+                        <span>Group Balances</span>
+                        <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">
+                            💡 Click on any member to trace their balance items
+                        </span>
+                    </div>
+                    <div class="balances-list">
+                        {% for b in balances %}
+                        <div class="balance-item" onclick="traceUser('{{ b.name }}')">
+                            <div class="balance-info">
+                                <h4>{{ b.name }}</h4>
+                                <p>{% if b.amount >= 0 %}Group owes {{ b.name }}{% else %}{{ b.name }} owes the group{% endif %}</p>
+                            </div>
+                            <span class="balance-amount {% if b.status == 'credit' %}credit{% else %}debt{% endif %}">
+                                Rs. {{ b.amount|abs|round(2) }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Aisha's optimized plan -->
+                <section class="card">
+                    <div class="card-title">
+                        Aisha's Optimized Settlements
+                    </div>
+                    <div class="settlement-list">
+                        {% if settlements_plan %}
+                            {% for t in settlements_plan %}
+                            <div class="transfer-card">
+                                <div class="transfer-party">
+                                    <strong style="color: #fca5a5;">{{ t.from }}</strong>
+                                    <span class="transfer-arrow">pays</span>
+                                    <strong style="color: #a7f3d0;">{{ t.to }}</strong>
+                                </div>
+                                <span class="transfer-value">Rs. {{ t.amount|round(2) }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="text-align: center; color: var(--text-muted); padding: 15px; border: 1px dashed var(--card-border); border-radius: 12px; font-size: 0.9rem;">
+                                🎉 All group accounts are settled! No payments needed.
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <!-- Recent Expenses -->
+                <section class="card">
+                    <div class="card-title">Recent Expenses Log</div>
+                    <div style="max-height: 250px; overflow-y: auto;">
+                        <table class="trace-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Payer</th>
+                                    <th style="text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for e in recent_expenses %}
+                                <tr>
+                                    <td>{{ e.date }}</td>
+                                    <td>{{ e.description }}</td>
+                                    <td>{{ e.payer }}</td>
+                                    <td style="text-align: right; font-weight: 600;">{{ e.amount }} {{ e.currency }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        function traceUser(name) {
+            fetch(`/trace/${name}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Populate Trace details
+                    document.getElementById('trace-title').innerText = `${data.user_name}'s Balance Ledger`;
+                    document.getElementById('trace-paid').innerText = `Rs. ${data.total_paid_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('trace-owed').innerText = `Rs. ${data.total_owed_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('trace-sent').innerText = `Rs. ${data.total_sent_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('trace-received').innerText = `Rs. ${data.total_received_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                    // Set formula text
+                    const bal = data.net_balance_inr;
+                    const balSign = bal >= 0 ? '+' : '';
+                    document.getElementById('trace-formula').innerHTML = `
+                        <strong>Net Balance Verification Formula:</strong><br>
+                        Paid (Rs. ${data.total_paid_inr.toFixed(2)}) - Owed (Rs. ${data.total_owed_inr.toFixed(2)}) + Sent (Rs. ${data.total_sent_inr.toFixed(2)}) - Received (Rs. ${data.total_received_inr.toFixed(2)})<br>
+                        = <strong>Rs. ${bal.toFixed(2)}</strong> (${bal >= 0 ? 'Group owes them' : 'They owe the group'})
+                    `;
+
+                    // Populate Paid Expenses
+                    const paidBody = document.querySelector('#trace-paid-table tbody');
+                    paidBody.innerHTML = '';
+                    data.paid_details.forEach(e => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${e.date}</td>
+                            <td>${e.description}</td>
+                            <td style="text-align: right;">${e.amount} ${e.currency}</td>
+                            <td style="text-align: right; font-weight:600;">Rs. ${e.inr_value.toFixed(2)}</td>
+                        `;
+                        paidBody.appendChild(tr);
+                    });
+                    if (data.paid_details.length === 0) {
+                        paidBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No expenses paid.</td></tr>';
+                    }
+
+                    // Populate Owed Splits
+                    const owedBody = document.querySelector('#trace-owed-table tbody');
+                    owedBody.innerHTML = '';
+                    data.owed_details.forEach(e => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${e.date}</td>
+                            <td>${e.description}</td>
+                            <td>${e.paid_by}</td>
+                            <td style="text-align: right;">${e.amount_owed} ${e.currency}</td>
+                            <td style="text-align: right; font-weight:600; color:#f87171;">Rs. ${e.inr_value.toFixed(2)}</td>
+                        `;
+                        owedBody.appendChild(tr);
+                    });
+                    if (data.owed_details.length === 0) {
+                        owedBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No splits owed.</td></tr>';
+                    }
+
+                    // Populate Settlements Sent / Received
+                    const settBody = document.querySelector('#trace-settlements-table tbody');
+                    settBody.innerHTML = '';
+                    
+                    data.sent_details.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${s.date}</td>
+                            <td style="color: #60a5fa; font-weight:600;">SENT</td>
+                            <td>To ${s.receiver}</td>
+                            <td style="text-align: right; font-weight:600; color:#34d399;">Rs. ${s.inr_value.toFixed(2)}</td>
+                        `;
+                        settBody.appendChild(tr);
+                    });
+                    data.received_details.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${s.date}</td>
+                            <td style="color: #fb7185; font-weight:600;">RECEIVED</td>
+                            <td>From ${s.sender}</td>
+                            <td style="text-align: right; font-weight:600; color:#f87171;">Rs. ${s.inr_value.toFixed(2)}</td>
+                        `;
+                        settBody.appendChild(tr);
+                    });
+                    
+                    if (data.sent_details.length === 0 && data.received_details.length === 0) {
+                        settBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No settlements.</td></tr>';
+                    }
+
+                    // Open Sidebar
+                    document.getElementById('overlay').classList.add('active');
+                    document.getElementById('sidebar').classList.add('active');
+                });
+        }
+
+        function closeTrace() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('sidebar').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

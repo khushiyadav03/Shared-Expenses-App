@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flatmate Login - Shared Expenses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e1b4b;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Abstract Glow Orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            top: 10%;
+            left: 15%;
+            opacity: 0.15;
+            animation: float-1 12s infinite alternate;
+        }
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: #d946ef;
+            bottom: 10%;
+            right: 15%;
+            opacity: 0.12;
+            animation: float-2 15s infinite alternate;
+        }
+
+        @keyframes float-1 {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(30px) scale(1.1); }
+        }
+        @keyframes float-2 {
+            0% { transform: translateY(0px) scale(1.1); }
+            100% { transform: translateY(-40px) scale(0.9); }
+        }
+
+        .login-container {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #a5b4fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--accent-glow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+            list-style: none;
+        }
+
+        .flash-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .hint-box {
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .hint-box p {
+            margin-bottom: 6px;
+        }
+        .hint-box ul {
+            padding-left: 20px;
+        }
+        .hint-box li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="login-container">
+        <div class="header">
+            <h1>Flatmate Portal</h1>
+            <p>Shared Expenses App Manager</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for category, message in messages %}
+                <li class="flash-message">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-group">
+                <label for="username">Select Flatmate</label>
+                <select name="username" id="username" required>
+                    <option value="" disabled selected>Choose a person...</option>
+                    <option value="Aisha">Aisha</option>
+                    <option value="Rohan">Rohan</option>
+                    <option value="Priya">Priya</option>
+                    <option value="Meera">Meera</option>
+                    <option value="Sam">Sam</option>
+                    <option value="Dev">Dev</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="Enter flatmate password" required>
+            </div>
+
+            <button type="submit" class="btn">Login Securely</button>
+        </form>
+
+        <div class="hint-box">
+            <p><strong>💡 Developer Seeding Notice:</strong></p>
+            <p>Use any flatmate's name with their default seeded password: <strong>[name]123</strong> (lowercase, e.g., <strong>aisha123</strong>, <strong>rohan123</strong>).</p>
+        </div>
+    </div>
+
+</body>
+</html>
