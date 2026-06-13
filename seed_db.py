@@ -4,21 +4,38 @@ from models import db, User, Group, GroupMembership
 from datetime import datetime
 from werkzeug.security import generate_password_hash
 
-def seed():
-    app = Flask(__name__)
-    database_url = os.environ.get('DATABASE_URL', 'sqlite:///shared_expenses.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    db.init_app(app)
+def seed(app=None, drop_tables=True):
+    created_own_app = False
+    if app is None:
+        app = Flask(__name__)
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            if 'VERCEL' in os.environ:
+                database_url = 'sqlite:////tmp/shared_expenses.db'
+            else:
+                database_url = 'sqlite:///shared_expenses.db'
+        elif database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+            
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(app)
+        created_own_app = True
     
     with app.app_context():
-        # Drop and create tables to start fresh
-        db.drop_all()
-        db.create_all()
-        
-        print("Database tables created.")
-        
+        if drop_tables:
+            db.drop_all()
+            db.create_all()
+            print("Database tables created (fresh drop).")
+        else:
+            db.create_all()
+            print("Database tables verified.")
+            
+        # Check if we already have users to avoid duplicate seeding when drop_tables=False
+        if User.query.first() is not None:
+            print("Database already seeded, skipping seed data injection.")
+            return
+
         # Create users
         users_data = [
             {"name": "Aisha", "email": "aisha@flat.com", "password": "aisha123"},
@@ -66,6 +83,10 @@ def seed():
         
         # Auto-import default dataset if present
         csv_path = "Expenses Export.csv"
+        # If running from inside Flask, we should use the absolute path relative to the root path
+        if not os.path.exists(csv_path) and not created_own_app:
+            csv_path = os.path.join(app.root_path, "Expenses Export.csv")
+            
         if os.path.exists(csv_path):
             print(f"Auto-importing dataset: {csv_path}")
             from importer import run_import
@@ -75,4 +96,4 @@ def seed():
             print("Expenses Export.csv not found, skipping auto-import.")
 
 if __name__ == "__main__":
-    seed()
+    seed(drop_tables=True)

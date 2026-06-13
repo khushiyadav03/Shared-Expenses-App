@@ -6,16 +6,39 @@ from models import db, User, Group, GroupMembership, Expense, Settlement, Expens
 from importer import run_import
 from balance_engine import calculate_group_balances, resolve_group_debts, get_user_balance_drilldown
 from werkzeug.security import check_password_hash
+from seed_db import seed as seed_database
 
 app = Flask(__name__)
 app.secret_key = 'spreetail_secret_key_shared_expenses'
 
 # Configuration
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///shared_expenses.db')
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    if 'VERCEL' in os.environ:
+        database_url = 'sqlite:////tmp/shared_expenses.db'
+    else:
+        database_url = 'sqlite:///shared_expenses.db'
+elif database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+# Auto-initialize and seed the database on start-up/first request
+@app.before_request
+def setup_db_if_needed():
+    if not hasattr(app, '_db_setup_done'):
+        try:
+            # Check if group exists, if not then seed
+            group = Group.query.filter_by(name="Flat 101").first()
+            if not group:
+                seed_database(app, drop_tables=False)
+        except Exception:
+            # Tables don't exist yet, seed them fresh without dropping (which creates tables and seeds)
+            seed_database(app, drop_tables=False)
+        app._db_setup_done = True
 
 # Helper to check login
 def get_logged_in_user():
@@ -137,15 +160,18 @@ def import_csv():
         return redirect(url_for('index'))
         
     if file:
-        # Save temp file
-        temp_dir = os.path.join(app.root_path, 'scratch')
+        # Save temp file - use /tmp on Vercel as it is the only writeable directory
+        if 'VERCEL' in os.environ:
+            temp_dir = '/tmp'
+        else:
+            temp_dir = os.path.join(app.root_path, 'scratch')
         os.makedirs(temp_dir, exist_ok=True)
         temp_path = os.path.join(temp_dir, 'uploaded_expenses.csv')
         file.save(temp_path)
         
         try:
             # Re-seed first to have a clean, fresh import for this dataset
-            os.system('.venv\\Scripts\\python seed_db.py')
+            seed_database(app, drop_tables=True)
             
             report = run_import(temp_path)
             session['import_report'] = report
